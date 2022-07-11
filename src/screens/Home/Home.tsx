@@ -12,7 +12,7 @@ export const Home = () => {
         </Heading>
       </Box>
       <Box width="full" mt={3} flexDirection="row" justifyContent="space-between">
-        <Heading size="md">On</Heading>
+        <Heading size="md">{isChecked ? 'On' : 'Off'}</Heading>
         <Switch size="lg" isChecked={isChecked} onToggle={() => setIsChecked(!isChecked)} />
       </Box>
       <Box width="full" mt={3} flexDirection="row" alignItems="center">

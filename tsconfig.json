@@ -3,5 +3,18 @@
   "compilerOptions": {
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@organisms/*": ["./src/components/ui/organisms/*"],
+      "@molecules/*": ["./src/components/ui/molecules/*"],
+      "@atoms/*": ["./src/components/ui/atoms/*"],
+      "@screens/*": ["./src/screens/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@assets/*": ["./assets/*"],
+    },
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PermissionsAndroid } from 'react-native';
-import RNBluetoothClassic, { BluetoothDevice } from 'react-native-bluetooth-classic';
+import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceReadEvent } from 'react-native-bluetooth-classic';
 import {
   Box,
   Text,
@@ -10,6 +10,7 @@ import {
   Switch,
   Button,
   Toast,
+  Input,
   Spinner,
   FlatList,
   HStack,
@@ -18,12 +19,16 @@ import {
   VStack
 } from 'native-base';
 
+type StateChangeEvent = {
+  enabled: boolean;
+};
+
 export const Home = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [devices, setDevices] = useState<BluetoothDevice[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<BluetoothDevice>({} as BluetoothDevice);
   const [loading, setLoading] = useState(false);
-  const [formInputs, setFormInputs] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   const requestAccessFineLocationPermission = async () => {
     const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
@@ -37,18 +42,23 @@ export const Home = () => {
   };
 
   const getBondedDevices = async () => {
-    console.log('DeviceListScreen::getBondedDevices');
     try {
+      const granted = await requestAccessFineLocationPermission();
+
+      if (!granted) {
+        Toast.show({ description: 'Sem permissão', duration: 2000 });
+        throw new Error('Access fine location was not granted');
+      }
+
       const bonded = await RNBluetoothClassic.getBondedDevices();
-      console.log('DeviceListScreen::getBondedDevices found');
 
       setLoading(true);
       setDevices(bonded);
-    } catch (error) {
+    } catch (err) {
+      console.log(err);
       setDevices([]);
-
       Toast.show({
-        description: error.message
+        description: 'Erro ao listar dispositivos pareados, verifique se o Bluetooth está ativo'
       });
     } finally {
       setLoading(false);
@@ -57,65 +67,36 @@ export const Home = () => {
 
   const checkBluetootEnabled = async () => {
     try {
-      console.log('App::componentDidMount Checking bluetooth status');
       const enabled = await RNBluetoothClassic.isBluetoothEnabled();
 
-      console.log(`App::componentDidMount Status: ${enabled}`);
       setIsChecked(enabled);
-    } catch (error) {
-      console.log('App::componentDidMount Status Error: ', error);
+    } catch (err) {
+      console.log('BrluetootEnabled Error: ', err);
       setIsChecked(false);
     }
   };
 
-  const startDiscovery = async () => {
+  const disconnect = async (device: BluetoothDevice) => {
     try {
-      const granted = await requestAccessFineLocationPermission();
-
-      if (!granted) {
-        throw new Error('Access fine location was not granted');
+      const disconnected = await device.disconnect();
+      if (disconnected) {
+        setConnectedDevice({} as BluetoothDevice);
       }
-
-      setLoading(true);
-
-      const listDevices = [...devices];
-
-      try {
-        const unpaired = await RNBluetoothClassic.startDiscovery();
-
-        unpaired.forEach(async (device) => {
-          const connected = await device.isConnected();
-          if (connected) {
-            await device.disconnect();
-          }
-        });
-        console.log(unpaired);
-        listDevices.push(...unpaired);
-        Toast.show({
-          description: `Found ${unpaired.length} unpaired devices.`,
-          duration: 2000
-        });
-      } finally {
-        setLoading(false);
-        setDevices(listDevices);
-      }
-    } catch (error) {
-      console.log('error', error);
+    } catch (err) {
+      console.log(err);
       Toast.show({
-        description: 'Habilite o bluetooth',
+        description: 'Erro ao desconectar dispositivo',
         duration: 2000
       });
     }
   };
 
-  const connect = async (device) => {
+  const connect = async (device: BluetoothDevice) => {
     try {
-      console.log('connect');
-      const a = await device.connect();
-
-      console.log(a);
-
-      setConnectedDevice(device);
+      const connected = await device.connect({ delimiter: '' });
+      if (connected) {
+        setConnectedDevice(device);
+      }
     } catch (err) {
       console.log(err);
       Toast.show({
@@ -125,74 +106,31 @@ export const Home = () => {
     }
   };
 
-  const onStateChanged = (stateChangedEvent) => {
-    console.log('App::onStateChanged event used for onBluetoothEnabled and onBluetoothDisabled');
-
+  const onStateChanged = (stateChangedEvent: StateChangeEvent) => {
     setIsChecked(stateChangedEvent.enabled);
   };
 
-  const read = async () => {
-    try {
-      const message = await connectedDevice.read();
-      console.log(message);
-      // setFormInputs(message);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const onReceivedData = async (data) => {
-    console.log('onReceivedData', data);
-    setFormInputs(true);
+  const onReceivedData = async (e: BluetoothDeviceReadEvent) => {
+    console.log('onReceivedData', e);
+    setInputValue(e.data);
   };
 
   useEffect(() => {
-    console.log(connectedDevice.id);
     if (connectedDevice.id === undefined) {
       return;
     }
-    let intervalId = '0';
 
-    const isConnected = async () => await connectedDevice.isConnected();
-    const isAvailable = async () => await connectedDevice.available();
-    isConnected()
-      .then((res) => {
-        console.log('isConnected', res);
-        console.log('bonded', connectedDevice.bonded);
-      })
-      .catch((err) => console.log('err isConnected', err));
+    const readSubscription = connectedDevice.onDataReceived((data) => onReceivedData(data));
 
-    isAvailable()
-      .then((res) => {
-        console.log('available', res);
-        // if (res) {
-        intervalId = setInterval(async () => {
-          const message = await connectedDevice.read();
-          // console.log(connectedDevice.address);
-          console.log('message', message);
-          await connectedDevice.clear();
-        }, 800);
-        // }
-      })
-      .catch((err) => {
-        console.log('err available', err);
-        if (intervalId !== '0') {
-          clearInterval(intervalId);
-        }
-      });
-
-    // connectedDevice.onDataReceived((data) => onReceivedData(data));
     return () => {
-      if (intervalId !== '0') {
-        clearInterval(intervalId);
-      }
+      readSubscription.remove();
     };
   }, [connectedDevice]);
 
   useEffect(() => {
     const enabledSubscription = RNBluetoothClassic.onBluetoothEnabled((e) => onStateChanged(e));
     const disabledSubscription = RNBluetoothClassic.onBluetoothDisabled((e) => onStateChanged(e));
-    const errorSubscription = RNBluetoothClassic.onError((error) => console.log(error));
+    const errorSubscription = RNBluetoothClassic.onError((error) => console.log('Error', error));
 
     checkBluetootEnabled();
 
@@ -202,8 +140,6 @@ export const Home = () => {
       errorSubscription.remove();
     };
   }, []);
-
-  const data = [{ id: '00:34', name: 'HC-05' }];
 
   return (
     <Flex align="center" justifyContent="flex-start" p={5} height="full" safeArea>
@@ -220,8 +156,17 @@ export const Home = () => {
         <Button onPress={async () => await getBondedDevices()}>Procurar</Button>
       </Box>
       <Box width="full" mt={3} flexDirection="row" alignItems="center">
-        {/* <Input /> */}
-        <Text>{formInputs ? 'Recebi dados' : 'Não recebi dados'}</Text>
+        <Input value={inputValue} isReadOnly />
+      </Box>
+      <Box width="full" mt={3} flexDirection="row" alignItems="center">
+        Dispositivo conectado:{' '}
+        {connectedDevice.id !== undefined && (
+          <>
+            <Text bold>{`${connectedDevice.name}-${connectedDevice.id.slice(0, 5).replace(':', '')}`}</Text>
+            <Spacer />
+            <Text onPress={async () => await disconnect(connectedDevice)}>Deconectar</Text>
+          </>
+        )}
       </Box>
       <Box width="full" mt={3} flexDirection="row" alignItems="center">
         <Text fontSize="md">Lista de dispositivos</Text>

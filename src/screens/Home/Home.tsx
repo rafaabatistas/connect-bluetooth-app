@@ -30,20 +30,21 @@ export const Home = () => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
-  const requestAccessFineLocationPermission = async () => {
-    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
-      title: 'Access fine location required for discovery',
-      message: 'In order to perform discovery, you must enable/allow ' + 'fine location access.',
-      buttonNeutral: 'Ask Me Later',
-      buttonNegative: 'Cancel',
-      buttonPositive: 'OK'
+  const requestAccessBluetoothConnect = async () => {
+    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT, {
+      title: 'O acesso ao bluetooth é obrigátorio para a busca de dispositivos',
+      message:
+        'Permitir que Connect Bluetooth App encontre, conecte-se e determine a posição relativa de dispositivos por perto?',
+      buttonNeutral: 'Pergunte-me mais tarde',
+      buttonNegative: 'Não permitir',
+      buttonPositive: 'Permitir'
     });
     return granted === PermissionsAndroid.RESULTS.GRANTED;
   };
 
   const getBondedDevices = async () => {
     try {
-      const granted = await requestAccessFineLocationPermission();
+      const granted = await requestAccessBluetoothConnect();
 
       if (!granted) {
         Toast.show({ description: 'Sem permissão', duration: 2000 });

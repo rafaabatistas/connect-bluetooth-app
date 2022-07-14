@@ -1,8 +1,17 @@
 {
   "expo": {
-    "name": "connect-bluetooth-app",
+    "name": "Connect Bluetooth App",
     "slug": "connect-bluetooth-app",
     "version": "1.0.0",
+    "sdkVersion": "45.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -12,13 +21,16 @@
     "android": {
       "permissions": [
         "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH_SCAN",
-        "android.permission.BLUETOOTH_ADVERTISE"
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
       ],
-      "package": "com.rafaabatista.connectbluetoothapp"
+      "package": "com.rafaabatista.connectbluetoothapp",
+      "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "com.rafaabatista.connectbluetoothapp",
+      "buildNumber": "1.0.0"
     }
   }
 }

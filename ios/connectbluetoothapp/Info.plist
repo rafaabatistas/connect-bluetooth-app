@@ -51,5 +51,7 @@
 	<false/>
   <key>UIStatusBarStyle</key>
   <string>UIStatusBarStyleDefault</string>
+  <key>NSBluetoothPeripheralUsageDescription</key>
+  <text>Allow Connect Bluetooth App to access bluetooth</text>
 </dict>
 </plist>

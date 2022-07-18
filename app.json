@@ -29,7 +29,6 @@
       "versionCode": 1
     },
     "ios": {
-      "bundleIdentifier": "com.rafaabatista.connectbluetoothapp",
       "buildNumber": "1.0.0"
     }
   }

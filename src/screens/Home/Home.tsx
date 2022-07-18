@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PermissionsAndroid } from 'react-native';
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceReadEvent } from 'react-native-bluetooth-classic';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   Box,
   Text,
@@ -13,6 +14,7 @@ import {
   Input,
   Spinner,
   FlatList,
+  Icon,
   HStack,
   Avatar,
   Spacer,
@@ -112,7 +114,6 @@ export const Home = () => {
   };
 
   const onReceivedData = async (e: BluetoothDeviceReadEvent) => {
-    console.log('onReceivedData', e);
     setInputValue(e.data);
   };
 
@@ -157,7 +158,14 @@ export const Home = () => {
         <Button onPress={async () => await getBondedDevices()}>Procurar</Button>
       </Box>
       <Box width="full" mt={3} flexDirection="row" alignItems="center">
-        <Input value={inputValue} isReadOnly />
+        <Input
+          value={inputValue}
+          isReadOnly
+          InputRightElement={
+            <Icon as={MaterialIcons} name="close" size={6} mr="2" color="muted.400" onPress={() => setInputValue('')} />
+          }
+          placeholder="Medida"
+        />
       </Box>
       <Box width="full" mt={3} flexDirection="row" alignItems="center">
         Dispositivo conectado:{' '}
